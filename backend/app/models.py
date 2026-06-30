@@ -1,0 +1,126 @@
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Enum
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from app.database import Base
+import enum
+
+
+class UserRole(str, enum.Enum):
+    admin = "admin"
+    vendor = "vendor"
+    customer = "customer"
+
+
+class OrderStatus(str, enum.Enum):
+    pending = "pending"
+    paid = "paid"
+    shipped = "shipped"
+    delivered = "delivered"
+    failed = "failed"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(Enum(UserRole), nullable=False)
+    is_approved = Column(Integer, default=1)
+
+    products = relationship("Product", back_populates="vendor")
+
+
+class Product(Base):
+    __tablename__ = "products"
+
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    name = Column(String, nullable=False)
+    description = Column(String)
+    price = Column(Float, nullable=False)
+    stock = Column(Integer, nullable=False, default=0)
+    category = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    image = Column(String, nullable=True)
+    vendor = relationship("User", back_populates="products")
+    cart_items = relationship("CartItem", back_populates="product")
+
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    quantity = Column(Integer, nullable=False)
+
+    product = relationship("Product", back_populates="cart_items")
+
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    vendor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    total_amount = Column(Float, nullable=False)
+    status = Column(Enum(OrderStatus), default=OrderStatus.pending)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    items = relationship("OrderItem", back_populates="order")
+    payment = relationship("Payment", back_populates="order", uselist=False)
+
+
+class OrderItem(Base):
+    __tablename__ = "order_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
+    quantity = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)
+
+    order = relationship("Order", back_populates="items")
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
+    rating = Column(Integer, nullable=False)
+    comment = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+
+    amount = Column(Float, nullable=False)
+
+    payment_method = Column(String, nullable=False)
+
+    transaction_id = Column(String, unique=True, nullable=False)
+
+    status = Column(String, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    order = relationship("Order", back_populates="payment")
+class Wishlist(Base):
+    __tablename__ = "wishlists"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    product = relationship("Product")
