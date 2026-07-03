@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db, require_role
-from app.models import User
+from app.models import User, Review
 from app.schemas import ReviewCreate, ReviewResponse
 from app.services.review_service import ReviewService
 
@@ -25,3 +25,27 @@ def get_product_reviews(
     db: Session = Depends(get_db)
 ):
     return ReviewService.get_product_reviews(db, product_id)
+@router.get("/check/{product_id}")
+def check_review(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["customer"]))
+):
+    review = (
+        db.query(Review)
+        .filter(
+            Review.product_id == product_id,
+            Review.customer_id == current_user.id
+        )
+        .first()
+    )
+
+    if review:
+        return {
+            "reviewed": True,
+            "rating": review.rating
+        }
+
+    return {
+        "reviewed": False
+    }

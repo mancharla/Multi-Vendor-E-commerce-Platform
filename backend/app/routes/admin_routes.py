@@ -56,3 +56,13 @@ def admin_dashboard(
     current_user: User = Depends(require_role(["admin"]))
 ):
     return AdminService.dashboard(db)
+@router.delete("/customers/{customer_id}")
+def delete_customer(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_role(["admin"]))
+):
+    return AdminService.delete_customer(
+        db,
+        customer_id
+    )

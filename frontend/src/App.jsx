@@ -23,6 +23,7 @@ import Vendors from "./pages/admin/Vendors";
 import Users from "./pages/admin/Users";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
+import Coupons from "./pages/admin/Coupons";
 
 function Home() {
   return (
@@ -128,6 +129,7 @@ function App() {
       <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["admin"]}><Users /></ProtectedRoute>} />
       <Route path="/admin/products" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProducts /></ProtectedRoute>} />
       <Route path="/admin/orders" element={<ProtectedRoute allowedRoles={["admin"]}><AdminOrders /></ProtectedRoute>} />
+      <Route path="/admin/coupons" element={<ProtectedRoute allowedRoles={["admin"]}><Coupons /></ProtectedRoute>} />
       <Route
   path="/customer/profile"
   element={

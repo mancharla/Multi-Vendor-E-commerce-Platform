@@ -4,7 +4,7 @@ from sqlalchemy import func, extract
 from app.services.email_service import EmailService
 
 from app.models import User, Product, Order, OrderStatus
-
+from app.models import User
 
 class AdminService:
 
@@ -134,3 +134,27 @@ class AdminService:
                 for row in users_by_role
             ]
         }
+@staticmethod
+def delete_customer(db, customer_id: int):
+    customer = (
+        db.query(User)
+        .filter(
+            User.id == customer_id,
+            User.role == "customer"
+        )
+        .first()
+    )
+
+    if not customer:
+        raise HTTPException(
+            status_code=404,
+            detail="Customer not found"
+        )
+
+    db.delete(customer)
+
+    db.commit()
+
+    return {
+        "message": "Customer deleted successfully"
+    }

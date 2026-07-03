@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from app.models import Coupon
 
 from app.models import (
     CartItem,
@@ -54,7 +55,33 @@ class OrderService:
                 total_amount = sum(
                     item.quantity * product.price
                     for item, product in items
-                )
+                ) 
+                discount_amount = 0
+
+                if payment_request.coupon_code:
+                    coupon = db.query(Coupon).filter(
+                        Coupon.code == payment_request.coupon_code.upper(),
+                        Coupon.is_active == True
+                    ).first()
+
+                    if not coupon:
+                        raise HTTPException(status_code=404, detail="Invalid or inactive coupon")
+
+                    if total_amount < coupon.min_order_amount:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Minimum order amount should be ₹{coupon.min_order_amount}"
+                        )
+
+                    if coupon.discount_type == "percentage":
+                        discount_amount = total_amount * coupon.discount_value / 100
+                    else:
+                        discount_amount = coupon.discount_value
+
+                    if discount_amount > total_amount:
+                        discount_amount = total_amount
+
+                total_amount = total_amount - discount_amount
 
                 order = Order(
                     customer_id=current_user.id,

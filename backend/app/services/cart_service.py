@@ -6,6 +6,36 @@ from app.models import CartItem, Product
 class CartService:
 
     @staticmethod
+    def product_stock_status(stock: int):
+        if stock == 0:
+            return "Out of Stock"
+        elif stock <= 5:
+            return "Low Stock"
+        return "In Stock"
+
+    @staticmethod
+    def cart_response(cart_item: CartItem):
+        product = cart_item.product
+
+        return {
+            "id": cart_item.id,
+            "customer_id": cart_item.customer_id,
+            "product_id": cart_item.product_id,
+            "quantity": cart_item.quantity,
+            "product": {
+                "id": product.id,
+                "vendor_id": product.vendor_id,
+                "name": product.name,
+                "description": product.description,
+                "price": product.price,
+                "stock": product.stock,
+                "category": product.category,
+                "image": product.image,
+                "stock_status": CartService.product_stock_status(product.stock),
+            },
+        }
+
+    @staticmethod
     def add_to_cart(db: Session, current_user, cart_data):
         if cart_data.quantity <= 0:
             raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
@@ -35,7 +65,8 @@ class CartService:
             existing_item.quantity = new_quantity
             db.commit()
             db.refresh(existing_item)
-            return existing_item
+
+            return CartService.cart_response(existing_item)
 
         cart_item = CartItem(
             customer_id=current_user.id,
@@ -47,13 +78,15 @@ class CartService:
         db.commit()
         db.refresh(cart_item)
 
-        return cart_item
+        return CartService.cart_response(cart_item)
 
     @staticmethod
     def get_cart(db: Session, customer_id: int):
-        return db.query(CartItem).filter(
+        cart_items = db.query(CartItem).filter(
             CartItem.customer_id == customer_id
         ).all()
+
+        return [CartService.cart_response(item) for item in cart_items]
 
     @staticmethod
     def update_cart_item(db: Session, current_user, item_id: int, cart_data):
@@ -78,7 +111,7 @@ class CartService:
         db.commit()
         db.refresh(cart_item)
 
-        return cart_item
+        return CartService.cart_response(cart_item)
 
     @staticmethod
     def remove_cart_item(db: Session, current_user, item_id: int):

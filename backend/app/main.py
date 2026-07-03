@@ -8,6 +8,7 @@ from app.routes import (
     admin_routes,
     review_routes
 )
+import os
 from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -15,6 +16,7 @@ from app.routes import payment_routes
 from app.routes import wishlist_routes
 from app.routes import vendor_dashboard_routes
 from app.routes import profile_routes
+from app.routes import coupon_routes
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.exception_handlers import (
@@ -51,6 +53,8 @@ app.include_router(payment_routes.router)
 app.include_router(wishlist_routes.router)
 app.include_router(vendor_dashboard_routes.router)
 app.include_router(profile_routes.router)
+app.include_router(coupon_routes.router)
+os.makedirs("uploads/products", exist_ok=True)
 
 app.mount(
     "/uploads",

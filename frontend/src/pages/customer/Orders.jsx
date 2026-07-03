@@ -5,10 +5,26 @@ import api from "../../api/axios";
 
 function Orders() {
   const [orders, setOrders] = useState([]);
+  const [reviewStatus, setReviewStatus] = useState({});
 
   const fetchOrders = async () => {
     const res = await api.get("/orders/my-orders");
     setOrders(res.data);
+
+    const status = {};
+
+    for (const order of res.data) {
+      for (const item of order.items) {
+        try {
+          const review = await api.get(`/reviews/check/${item.product_id}`);
+          status[item.product_id] = review.data;
+        } catch {
+          status[item.product_id] = { reviewed: false };
+        }
+      }
+    }
+
+    setReviewStatus(status);
   };
 
   useEffect(() => {
@@ -83,14 +99,22 @@ function Orders() {
                       </p>
                     </div>
 
-                    {canReview(order.status) && (
-                      <Link
-                        to={`/customer/products/${item.product_id}/review`}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold text-center"
-                      >
-                        Review Product
-                      </Link>
-                    )}
+                    {canReview(order.status) &&
+                      (reviewStatus[item.product_id]?.reviewed ? (
+                        <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl font-semibold">
+                          <span>
+                            {"⭐".repeat(reviewStatus[item.product_id].rating)}
+                          </span>
+                          Reviewed
+                        </div>
+                      ) : (
+                        <Link
+                          to={`/customer/products/${item.product_id}/review`}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold text-center"
+                        >
+                          ⭐ Review Product
+                        </Link>
+                      ))}
                   </div>
                 ))}
               </div>

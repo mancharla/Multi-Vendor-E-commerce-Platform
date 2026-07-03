@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models import Review, Product, Order, OrderItem, OrderStatus
+from app.models import Review, Product, Order, OrderItem, OrderStatus,User
 
 
 class ReviewService:

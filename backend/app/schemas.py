@@ -70,10 +70,14 @@ class CartItemUpdate(BaseModel):
 
 class CartProductResponse(BaseModel):
     id: int
+    vendor_id: int
     name: str
+    description: str | None
     price: float
     stock: int
     category: str | None
+    image: str | None
+    stock_status: str
 
     class Config:
         from_attributes = True
@@ -135,6 +139,7 @@ class ReviewResponse(BaseModel):
         from_attributes = True
 class PaymentRequest(BaseModel):
     payment_method: str
+    coupon_code: str | None = None
 
 
 class PaymentResponse(BaseModel):
@@ -159,3 +164,25 @@ class WishlistResponse(BaseModel):
 
     class Config:
         from_attributes = True
+class CouponCreate(BaseModel):
+    code: str
+    discount_type: str
+    discount_value: float
+    min_order_amount: float = 0
+
+
+class CouponResponse(BaseModel):
+    id: int
+    code: str
+    discount_type: str
+    discount_value: float
+    min_order_amount: float
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class ApplyCouponRequest(BaseModel):
+    code: str
+    cart_total: float
